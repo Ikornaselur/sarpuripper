@@ -1,0 +1,9 @@
+Pygments==2.0.2
+argparse==1.2.1
+beautifulsoup4==4.3.2
+fancycompleter==0.4
+pdbpp==0.7.2
+pyrepl==0.8.4
+requests==2.5.1
+wmctrl==0.1
+wsgiref==0.1.2
