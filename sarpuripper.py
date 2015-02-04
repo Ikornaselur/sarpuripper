@@ -2,10 +2,20 @@ import requests
 import sys
 import random
 import string
+
+from rq import Queue
+from rq.job import Job
+from worker import conn
+from flask import Flask, request, render_template
 from bs4 import BeautifulSoup as bs
 from urlparse import parse_qs
 from subprocess import check_call as call 
 from os import devnull
+
+
+app = Flask(__name__)
+app.debug = True
+q = Queue(connection=conn)
 
 
 def get_stream_vars(url):
@@ -31,20 +41,42 @@ def convert_file(from_file, to_file):
     DEVNULL = open(devnull, 'w')
     call(['avconv', '-i', from_file, '-codec', 'copy', to_file],
          stdout=DEVNULL, stderr=DEVNULL, close_fds=True)
- 
 
-if __name__ == '__main__':
-    random = ''.join([random.choice(string.ascii_letters + string.digits) for n in xrange(32)])
-    tmp_file_from = '/tmp/{}.flv'.format(random)
-    tmp_file_to = '/tmp/{}.mp4'.format(random)
 
-    if len(sys.argv) != 2:
-        print "Need exactly one argument: the url"
-        exit(1)
-    svars = get_stream_vars(sys.argv[1])
+def process_file(url, rnd):
+    tmp_file_from = '/tmp/{}.flv'.format(rnd)
+    tmp_file_to = '/tmp/{}.mp4'.format(rnd)
+
+    svars = get_stream_vars(url)
     if svars:
         complete_url = '{}/{}'.format(svars['streamer'][0], svars['file'][0])
-        print "Stream url found at {}".format(complete_url)
         rip_stream(complete_url, tmp_file_from)
         convert_file(tmp_file_from, tmp_file_to)
-        print "File ready at {}".format(tmp_file_to)
+        return tmp_file_to
+ 
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if request.method == "POST":
+        rnd = ''.join(
+            [random.choice(
+                string.ascii_letters + string.digits) for n in xrange(32)])
+        url = request.form['url']
+        job = q.enqueue_call(
+            func="sarpuripper.process_file", args=(url, rnd), result_ttl=600)
+        print job.get_id()
+    return render_template('index.html')
+
+
+@app.route('/results/<job_key>', methods=['GET'])
+def get_results(job_key):
+    job = Job.fetch(job_key, connection=conn)
+
+    if job.is_finished:
+        return str(job.result), 200
+    else:
+        return "Nay!", 202
+
+
+if __name__ == '__main__':
+    app.run()
