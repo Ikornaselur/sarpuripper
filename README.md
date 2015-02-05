@@ -5,3 +5,4 @@ A simple flask application that takes a link to a sarpur stream from RUV and pro
 ## Requirements
 - rtmpdump
 - avconv (libav-tools)
+- redis-server
