@@ -65,7 +65,6 @@ def index():
         job = q.enqueue_call(
             func="sarpuripper.process_file", args=(url, rnd), result_ttl=600)
         return job.get_id()
-        return '2667d2c5-1c88-4be4-9be3-a31e0e9c824e'
     return render_template('index.html')
 
 
