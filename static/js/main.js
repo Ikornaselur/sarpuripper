@@ -15,6 +15,8 @@ $(document).ready(function () {
                 href[0].href = data;
                 
                 elm.find('#job_status')[0].innerHTML = 'Finished';
+                elm.removeClass('warning');
+                elm.addClass('success');
             }
         })
     };
@@ -29,10 +31,11 @@ $(document).ready(function () {
             var num = $resList[0].children.length;
 
             var itemID = 'item' + num;
-            var $item = $('<tr>').appendTo($resList);
+            var $item = $('<tr class="warning">').appendTo($resList);
 
             $('<td id="job_status">processing..</th>').appendTo($item);
-            $('<th id="job_id">' + data + '</th>').appendTo($item);
+            $('<th id="job_id">' + data['job_id'] + '</th>').appendTo($item);
+            $('<th id="title">' + data['file_title'] + '</th>').appendTo($item);
             $('<th><a href="#" class="btn btn-link disabled" style="padding: 0;">Link</a></th>').appendTo($item);
             
             checkState($item);
