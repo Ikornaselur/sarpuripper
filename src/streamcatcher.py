@@ -21,8 +21,11 @@ from re import sub
 
 app = Flask(__name__)
 app.debug = True
+app.template_folder = '../templates/'
+app.static_folder = '../static/'
+
 q = Queue(connection=conn)
-BASE_DIR = '/tmp/sarpuripper'
+BASE_DIR = '/tmp/streamcatcher'
 
 
 def get_soup(url):
@@ -38,13 +41,13 @@ def get_stream_vars(soup):
     return None 
 
 
-def get_show_title(soup):
-    title = _(soup.find(id='thattatitill').text)
-    date = soup.find(class_='sarpur-date').find(text=True)
+def get_file_title(svars):
+    title_str = _(svars['title'][0])
+    file_name = svars['file'][0].split('/')[-1].split('.')[0]
+    
+    title = '{}_{}'.format(title_str, file_name)
 
-    result = '{} {}'.format(title, date).strip()
-
-    result = sub(r'[^\w\s]+', '', result)
+    result = sub(r'[^\w\s]+', '', title)
     result = sub(r'\s+', '_', result)
     return result
 
@@ -88,11 +91,12 @@ def index():
         url = request.form['url']
 
         soup = get_soup(url)
-        title = get_show_title(soup)
         svars = get_stream_vars(soup)
 
+        title = get_file_title(svars)
+
         job = q.enqueue_call(
-            func="sarpuripper.process_file", args=(url, rnd, title, svars), result_ttl=600)
+            func="streamcatcher.process_file", args=(url, rnd, title, svars), result_ttl=600)
         return jsonify(job_id=job.get_id(), file_title=title)
     return render_template('index.html')
 

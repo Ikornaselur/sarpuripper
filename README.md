@@ -1,6 +1,6 @@
-# sarpuripper
+# StreamCatcher 
 
-A simple flask application that takes a link to a sarpur stream from RUV and provides a mp4 download of the streamed file
+A simple flask application that finds a rtmp stream url and provides a mp4 download of the streamed file
 
 ## Requirements
 - rtmpdump
