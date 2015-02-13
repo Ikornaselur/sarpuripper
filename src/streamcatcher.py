@@ -14,21 +14,23 @@ from flask import Flask, request, render_template, jsonify
 from bs4 import BeautifulSoup as bs
 from urlparse import parse_qs
 from subprocess import check_call as call 
-from os import devnull
+from os import devnull, getenv
 from unidecode import unidecode as _
 from re import sub
 
 
 app = Flask(__name__)
-app.debug = True
 app.template_folder = '../templates/'
 app.static_folder = '../static/'
+app.debug = getenv('DEBUG', False) == 'True'
 
 q = Queue(connection=conn)
 BASE_DIR = '/tmp/streamcatcher'
 
 
 def get_soup(url):
+    if not url.startswith('http://'):
+        url = 'http://' + url
     r = requests.get(url)
     data = r.text
     return bs(data)
@@ -105,8 +107,11 @@ def index():
 def get_results(job_key):
     job = Job.fetch(job_key, connection=conn)
 
+
     if job.is_finished:
         return str(job.result), 200
+    elif job.is_failed:
+        return str(job.result), 500
     else:
         return "Nay!", 202
 
@@ -114,4 +119,4 @@ def get_results(job_key):
 if __name__ == '__main__':
     if not os.path.exists(BASE_DIR):
         os.makedirs(BASE_DIR)
-    app.run()
+    app.run(host='0.0.0.0')
