@@ -1,0 +1,18 @@
+web:
+    build: .
+    command: python src/streamcatcher.py
+    ports: 
+        - "5000:5000"
+    volumes:
+        - .:/opt/streamcatcher
+    links:
+        - redis:redis
+worker:
+    build: .
+    command: python src/worker.py
+    volumes:
+        - .:/opt/streamcatcher
+    links:
+        - redis:redis
+redis:
+    image: redis
